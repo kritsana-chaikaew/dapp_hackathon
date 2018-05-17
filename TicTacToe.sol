@@ -18,6 +18,8 @@ contract TicTacToe {
     uint256 _pot;
     int8[2] _flags;
     int8 _three;
+    bool _isStart;
+    bool _isJoin;
 
     // Create a new game, challenging a named opponent.
     // The value passed in is the stake which the opponent must match.
@@ -31,20 +33,25 @@ contract TicTacToe {
         _p1Commitment = p1Commitment;
         _pot = address(this).balance;
         _three = 3;
+        _isStart = false;
+        _isJoin = false;
     }
 
     // Join a game as the second player.
     function joinGame(uint8 p2Nonce) public payable {
+        require(_isJoin == false);
         // only the specified opponent may join
         require (msg.sender == _playerAddress[1]);
         // must match player 1's stake.
         require ((msg.value * 2) >= _pot);
 
         _p2Nonce = p2Nonce;
+        _isJoin = true;
     }
 
     // Revealing player 1's nonce to choose who goes first.
     function startGame(uint8 p1Nonce) public {
+        require(_isJoin && (_isStart == false));
         // must open the original commitment
         require (keccak256(p1Nonce) == _p1Commitment);
 
@@ -53,10 +60,14 @@ contract TicTacToe {
 
         // start the clock for the next move
         _turnDeadline = block.number + _turnLength;
+
+        _isStart = true;
     }
 
     // Submit a move
     function playMove(uint8 squareToPlay) public {
+        require(_isStart);
+        require(squareToPlay < 9);
         // make sure correct player is submitting a move
         require (msg.sender == _playerAddress[_currentPlayer]);
 
@@ -88,8 +99,8 @@ contract TicTacToe {
             || (_board[0] + _board[3] + _board[6] == _three * _flags[_currentPlayer])
             || (_board[1] + _board[4] + _board[7] == _three * _flags[_currentPlayer])
             || (_board[2] + _board[5] + _board[8] == _three * _flags[_currentPlayer])
-            || (_board[0] * _board[4] * _board[8] == _three * _flags[_currentPlayer])
-            || (_board[2] * _board[4] * _board[6] == _three * _flags[_currentPlayer])) {
+            || (_board[0] + _board[4] + _board[8] == _three * _flags[_currentPlayer])
+            || (_board[2] + _board[4] + _board[6] == _three * _flags[_currentPlayer])) {
             return true;
         }
         return false;
