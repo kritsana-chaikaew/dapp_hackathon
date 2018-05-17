@@ -1,4 +1,5 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.8;
+
 
 contract TicTacToe {
     // game configuration
@@ -16,11 +17,12 @@ contract TicTacToe {
     
     uint256 _pot;
     int8[2] _flags;
+    int8 _three;
 
     // Create a new game, challenging a named opponent.
     // The value passed in is the stake which the opponent must match.
     // The challenger commits to its nonce used to determine first mover.
-    constructor (address opponent, uint32 turnLength, bytes32 p1Commitment) public payable {
+    function TicTacToe (address opponent, uint32 turnLength, bytes32 p1Commitment) public payable {
         _flags[0] = -1;
         _flags[1] = 1;
         _playerAddress[0] = msg.sender;
@@ -28,6 +30,7 @@ contract TicTacToe {
         _turnLength = turnLength;
         _p1Commitment = p1Commitment;
         _pot = address(this).balance;
+        _three = 3;
     }
 
     // Join a game as the second player.
@@ -43,7 +46,7 @@ contract TicTacToe {
     // Revealing player 1's nonce to choose who goes first.
     function startGame(uint8 p1Nonce) public {
         // must open the original commitment
-        require (keccak256(abi.encodePacked(p1Nonce)) == _p1Commitment);
+        require (keccak256(p1Nonce) == _p1Commitment);
 
         // XOR both nonces and take the last bit to pick the first player
         _currentPlayer = (p1Nonce ^ _p2Nonce) & 0x01;
@@ -79,14 +82,14 @@ contract TicTacToe {
     }
 
     function checkGameOver() internal view returns (bool) {
-        if ((_board[0] + _board[1] + _board[2] == 3 * _flags[_currentPlayer])
-            || (_board[3] + _board[4] + _board[5] == 3 * _flags[_currentPlayer]) 
-            || (_board[6] + _board[7] + _board[8] == 3 * _flags[_currentPlayer])
-            || (_board[0] + _board[3] + _board[6] == 3 * _flags[_currentPlayer])
-            || (_board[1] + _board[4] + _board[7] == 3 * _flags[_currentPlayer])
-            || (_board[2] + _board[5] + _board[8] == 3 * _flags[_currentPlayer])
-            || (_board[0] * _board[4] * _board[8] == 3 * _flags[_currentPlayer])
-            || (_board[2] * _board[4] * _board[6] == 3 * _flags[_currentPlayer])) {
+        if ((_board[0] + _board[1] + _board[2] == _three * _flags[_currentPlayer])
+            || (_board[3] + _board[4] + _board[5] == _three * _flags[_currentPlayer]) 
+            || (_board[6] + _board[7] + _board[8] == _three * _flags[_currentPlayer])
+            || (_board[0] + _board[3] + _board[6] == _three * _flags[_currentPlayer])
+            || (_board[1] + _board[4] + _board[7] == _three * _flags[_currentPlayer])
+            || (_board[2] + _board[5] + _board[8] == _three * _flags[_currentPlayer])
+            || (_board[0] * _board[4] * _board[8] == _three * _flags[_currentPlayer])
+            || (_board[2] * _board[4] * _board[6] == _three * _flags[_currentPlayer])) {
             return true;
         }
         return false;
